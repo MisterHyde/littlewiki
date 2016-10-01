@@ -8,7 +8,6 @@ import cherrypy
 class Wiki():
 
     def __init__(self):
-        f = open('./wiki.conf')
         self.rstpath = '/home/felix/Documents/Notes/rst/'
         self.htmlpath = '/home/felix/Documents/Notes/rst/html/'
         # Load md5 check sums of the rst files

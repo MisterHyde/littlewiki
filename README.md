@@ -6,3 +6,6 @@ Creates an index file which lists all .rst files in the given directory.
 The self.rstpath is the path where the .rst files lies.
 The self.htmlpath is the path where the .html files resident.
 If in the self.htmlpath is a file voidspace.css rst2html will use it to style the pages
+
+# Installation
+The python-cherrypy package is needed. And I tested the script just with python3 
