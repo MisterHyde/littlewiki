@@ -8,8 +8,11 @@ import cherrypy
 class Wiki():
 
     def __init__(self):
+        # The path where the .rst files lies
         self.rstpath = '/home/felix/Documents/Notes/rst/'
+        # The path where the html files should be stored
         self.htmlpath = '/home/felix/Documents/Notes/rst/html/'
+
         # Load md5 check sums of the rst files
         try:
             f = open(self.rstpath + '.md5sums')
@@ -19,13 +22,13 @@ class Wiki():
         except:
             self.md5sums = dict()
             
-        self.css = ''
+        self.cssfile = ''
         if "main.css" in os.listdir(self.htmlpath):
-            self.css = '--stylesheet-path=%smain.css' %(self.htmlpath)
+            self.cssfile = '%smain.css' %(self.htmlpath)
 
+    # Creates a html site with links to all .html files
     @cherrypy.expose
     def index(self):
-        # self.loadMd5sums()
         files = os.listdir(self.rstpath)
         page = '<html><head></head><body>'
         test = '\nTEST\n'
@@ -47,9 +50,9 @@ class Wiki():
 
         return page + '</body></html>'
 
+    # Returns the html page specified with the GET parameter 'pagename'
     @cherrypy.expose
     def page(self, pagename):
-        # self.loadMd5sums()
         rstfile = pagename[:-5] + '.rst'
         md5sum = self.md5(self.rstpath + rstfile)
         if  md5sum != self.md5sums[rstfile]:
@@ -64,8 +67,8 @@ class Wiki():
     def createHtml(self, rstfile, md5sum, save=False):
         rstcmd = list()
         rstcmd.append('rst2html')
-        if self.css != '':
-            rstcmd.append(self.css)
+        if self.cssfile != '':
+            rstcmd.append('--stylesheet-path=%s' %(self.css))
         rstcmd.append('%s%s' %(self.rstpath, rstfile))
         rstcmd.append('%s%s.html' %(self.htmlpath, rstfile[:-4]))
         test = '\n'
@@ -83,11 +86,15 @@ class Wiki():
             if save:
                 self.saveMd5sums()
 
+    # Saves self.md5sums as json string to self.rstpath+.md5sums
     def saveMd5sums(self):
         f = open(self.rstpath + '.md5sums', 'w')
         f.write(json.dumps(self.md5sums))
         f.close()
 
+    # Creates a md5 sum for the given file copied from the stackoverflypost
+    # "https://stackoverflow.com/questions/3431825/generating-an-md5-checksum-of-a-file#3431835" 
+    # from the user quantum soup
     def md5(self, fname):
         hash_md5 = hashlib.md5()
         with open(fname, "rb") as f:
