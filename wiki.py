@@ -18,6 +18,10 @@ class Wiki():
             self.md5sums = json.loads(d)
         except:
             self.md5sums = dict()
+            
+        self.css = ''
+        if "main.css" in os.listdir(self.htmlpath):
+            self.css = '--stylesheet-path=%smain.css' %(self.htmlpath)
 
     @cherrypy.expose
     def index(self):
@@ -58,8 +62,18 @@ class Wiki():
 
     # Call of the rst2html for the given rstfile
     def createHtml(self, rstfile, md5sum, save=False):
-        process = subprocess.Popen(['rst2html', '--stylesheet-path=%svoidspace.css' %(self.htmlpath),
-            '%s%s' %(self.rstpath, rstfile), '%s%s.html' %(self.htmlpath, rstfile[:-4])])
+        rstcmd = list()
+        rstcmd.append('rst2html')
+        if self.css != '':
+            rstcmd.append(self.css)
+        rstcmd.append('%s%s' %(self.rstpath, rstfile))
+        rstcmd.append('%s%s.html' %(self.htmlpath, rstfile[:-4]))
+        test = '\n'
+        for t in rstcmd:
+            test += t + ' '
+        test += '\n'
+        print(test)
+        process = subprocess.Popen(rstcmd)
         out, err = process.communicate()
         errcode = process.returncode
         print('errcode:%s' %(errcode))
@@ -88,15 +102,8 @@ if __name__ == '__main__':
     config = {'global':
         {
             'server.socket_host': "127.0.0.1",
-            'server.socket_port': 8080,
+            'server.socket_port': 18080,
             'server.thread_pool': 10,
-            'tools.sessions.on': True,
-            'tools.staticdir.root': os.path.abspath(os.getcwd())
-        },
-        '/static':
-        {
-            'tools.staticdir.on': True,
-            'tools.staticdir.dir': "./public"
         }
     }
     cherrypy.quickstart(Wiki(), '/', config=config)

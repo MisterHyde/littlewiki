@@ -1,11 +1,9 @@
-# Description
+DESCRIPTION
 A little server using cherrypy to facilitate.
 Creates an index file which lists all .rst files in the given directory.
+And checks on reload if a .rst file has changed, if yes the html file will be updated.
 
-# Configuration
+CONFIGURATION
 The self.rstpath is the path where the .rst files lies.
 The self.htmlpath is the path where the .html files resident.
-If in the self.htmlpath is a file voidspace.css rst2html will use it to style the pages
-
-# Installation
-The python-cherrypy package is needed. And I tested the script just with python3 
+If in the self.htmlpath is a file main.css rst2html will use it to style the pages.
