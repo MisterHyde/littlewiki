@@ -11,6 +11,7 @@ The self.htmlpath is the path where the .html files resident.
 If in the self.htmlpath is a file main.css rst2html will use it to style the pages.
 
 DEPENDENCIES
-cherrypy
-python3
-docutils
+
++ cherrypy
++ python3
++ docutils
