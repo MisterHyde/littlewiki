@@ -9,9 +9,9 @@ class Wiki():
 
     def __init__(self):
         # The path where the .rst files lies
-        self.rstpath = '/home/felix/Documents/Notes/rst/'
+        self.rstpath = '/home/felix/Documents/Notes/'
         # The path where the html files should be stored
-        self.htmlpath = '/home/felix/Documents/Notes/rst/html/'
+        self.htmlpath = '/home/felix/Documents/Notes/html/'
 
         # Load md5 check sums of the rst files
         try:
@@ -68,7 +68,7 @@ class Wiki():
         rstcmd = list()
         rstcmd.append('rst2html')
         if self.cssfile != '':
-            rstcmd.append('--stylesheet-path=%s' %(self.css))
+            rstcmd.append('--stylesheet-path=%s' %(self.cssfile))
         rstcmd.append('%s%s' %(self.rstpath, rstfile))
         rstcmd.append('%s%s.html' %(self.htmlpath, rstfile[:-4]))
         test = '\n'
