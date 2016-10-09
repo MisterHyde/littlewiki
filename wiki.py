@@ -12,6 +12,10 @@ class Wiki():
         self.rstpath = '/home/felix/Documents/Notes/'
         # The path where the html files should be stored
         self.htmlpath = '/home/felix/Documents/Notes/html/'
+        # A dictionary with the relative paths to all rst files
+        self.rstfiles = dict()
+        # A dict for storing paths to the img folders of the rst files
+        self.imgpaths = dict()
 
         # Load md5 check sums of the rst files
         try:
@@ -26,35 +30,38 @@ class Wiki():
         if "main.css" in os.listdir(self.htmlpath):
             self.cssfile = '%smain.css' %(self.htmlpath)
 
-    # Creates a html site with links to all .html files
-    @cherrypy.expose
-    def index(self):
-        files = os.listdir(self.rstpath)
-        page = '<html><head></head><body>'
-        test = '\nTEST\n'
-        for f in files:
-            if ".rst" == f[-4:]:
-                md5sum = self.md5(self.rstpath + f)
-                if not (f in self.md5sums):
-                    self.createHtml(f, md5sum)
-                # Extra elif to prevent KeyError in md5sums
-                elif(md5sum != self.md5sums[f]):
-                    self.createHtml(f, md5sum)
-
-                page += '<a href="/page?pagename=%s.html">%s</a><br>' %(f[:-4], f[:-4])
-
-        test += '\n'
-        print(test)
+        for dirname, dirnames, filenames in os.walk(self.rstpath):
+            if '.git' in dirnames:
+                dirnames.remove('.git')
+            for filename in filenames:
+                if filename[-4:] == '.rst':
+                    self.rstfiles[filename] = os.path.join(dirname, filename)
+                    md5sum = self.md5(self.rstfiles[filename])
+                    if not (filename in self.md5sums):
+                        self.createHtml(filename, md5sum)
+                    # Extra elif to prevent KeyError in md5sums
+                    elif(md5sum != self.md5sums[filename]):
+                        self.createHtml(filename, md5sum)
+                    # If exists img dir then create a symlink in the html path
+                    if os.path.isdir("%s/img" %(dirname)):
+                        print("%s/img" %(dirname) + " => %s%s" %(self.htmlpath, filename[:-4]))
+                        os.symlink("%s/img" %(dirname), "%s%s" %(self.htmlpath, filename[:-4]))
 
         self.saveMd5sums()
 
+    # Creates a html site with links to all .html files
+    @cherrypy.expose
+    def index(self):
+        page = '<html><head></head><body>'
+        for filename,path in self.rstfiles.items():
+            page += '<a href="/page?pagename=%s.html">%s</a><br>' %(filename[:-4], filename[:-4])
         return page + '</body></html>'
 
     # Returns the html page specified with the GET parameter 'pagename'
     @cherrypy.expose
     def page(self, pagename):
         rstfile = pagename[:-5] + '.rst'
-        md5sum = self.md5(self.rstpath + rstfile)
+        md5sum = self.md5(self.rstfiles[rstfile])
         if  md5sum != self.md5sums[rstfile]:
             self.createHtml(rstfile, md5sum, True)
 
@@ -69,7 +76,7 @@ class Wiki():
         rstcmd.append('rst2html')
         if self.cssfile != '':
             rstcmd.append('--stylesheet-path=%s' %(self.cssfile))
-        rstcmd.append('%s%s' %(self.rstpath, rstfile))
+        rstcmd.append('%s' %(self.rstfiles[rstfile]))
         rstcmd.append('%s%s.html' %(self.htmlpath, rstfile[:-4]))
         test = '\n'
         for t in rstcmd:
