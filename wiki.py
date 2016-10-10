@@ -4,6 +4,7 @@ import os
 import subprocess
 import hashlib
 import cherrypy
+from cherrypy.lib.static import serve_file
 
 class Wiki():
 
@@ -16,6 +17,7 @@ class Wiki():
         self.rstfiles = dict()
         # A dict for storing paths to the img folders of the rst files
         self.imgpaths = dict()
+        self.currdir = "%s/" %(os.path.dirname(os.path.abspath(__file__)))
 
         # Load md5 check sums of the rst files
         try:
@@ -45,7 +47,11 @@ class Wiki():
                     # If exists img dir then create a symlink in the html path
                     if os.path.isdir("%s/img" %(dirname)):
                         print("%s/img" %(dirname) + " => %s%s" %(self.htmlpath, filename[:-4]))
-                        os.symlink("%s/img" %(dirname), "%s%s" %(self.htmlpath, filename[:-4]))
+                        try:
+                            os.symlink("%s/img" %(dirname), "%spublic/%s" %(
+                                self.currdir ,filename[:-4]))
+                        except:
+                            print('')
 
         self.saveMd5sums()
 
@@ -68,7 +74,8 @@ class Wiki():
         f = open(self.htmlpath + pagename)
         page = f.read()
         f.close()
-        return page
+        print(os.path.dirname(os.path.abspath(__file__)))
+        return serve_file(self.htmlpath + pagename)
 
     # Call of the rst2html for the given rstfile
     def createHtml(self, rstfile, md5sum, save=False):
@@ -118,6 +125,12 @@ if __name__ == '__main__':
             'server.socket_host': "127.0.0.1",
             'server.socket_port': 18080,
             'server.thread_pool': 10,
+        },
+        '/static':
+        {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': "%s/public" % (os.path.dirname(os.path.abspath(__file__)))
         }
+
     }
     cherrypy.quickstart(Wiki(), '/', config=config)
