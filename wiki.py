@@ -32,6 +32,32 @@ class Wiki():
         if "main.css" in os.listdir(self.htmlpath):
             self.cssfile = '%smain.css' %(self.htmlpath)
 
+        self.searchRst()
+
+    # Creates a html site with links to all .html files
+    @cherrypy.expose
+    def index(self):
+        self.searchRst()
+        page = '<html><head></head><body>'
+        for filename,path in self.rstfiles.items():
+            page += '<a href="/page?pagename=%s.html">%s</a><br>' %(filename[:-4], filename[:-4])
+        return page + '</body></html>'
+
+    # Returns the html page specified with the GET parameter 'pagename'
+    @cherrypy.expose
+    def page(self, pagename):
+        rstfile = pagename[:-5] + '.rst'
+        md5sum = self.md5(self.rstfiles[rstfile])
+        if  md5sum != self.md5sums[rstfile]:
+            self.createHtml(rstfile, md5sum, True)
+
+        f = open(self.htmlpath + pagename)
+        page = f.read()
+        f.close()
+        print(os.path.dirname(os.path.abspath(__file__)))
+        return serve_file(self.htmlpath + pagename)
+
+    def searchRst(self):
         for dirname, dirnames, filenames in os.walk(self.rstpath):
             if '.git' in dirnames:
                 dirnames.remove('.git')
@@ -55,27 +81,6 @@ class Wiki():
 
         self.saveMd5sums()
 
-    # Creates a html site with links to all .html files
-    @cherrypy.expose
-    def index(self):
-        page = '<html><head></head><body>'
-        for filename,path in self.rstfiles.items():
-            page += '<a href="/page?pagename=%s.html">%s</a><br>' %(filename[:-4], filename[:-4])
-        return page + '</body></html>'
-
-    # Returns the html page specified with the GET parameter 'pagename'
-    @cherrypy.expose
-    def page(self, pagename):
-        rstfile = pagename[:-5] + '.rst'
-        md5sum = self.md5(self.rstfiles[rstfile])
-        if  md5sum != self.md5sums[rstfile]:
-            self.createHtml(rstfile, md5sum, True)
-
-        f = open(self.htmlpath + pagename)
-        page = f.read()
-        f.close()
-        print(os.path.dirname(os.path.abspath(__file__)))
-        return serve_file(self.htmlpath + pagename)
 
     # Call of the rst2html for the given rstfile
     def createHtml(self, rstfile, md5sum, save=False):
@@ -83,6 +88,7 @@ class Wiki():
         rstcmd.append('rst2html')
         if self.cssfile != '':
             rstcmd.append('--stylesheet-path=%s' %(self.cssfile))
+        rstcmd.append('--tab-width=4')
         rstcmd.append('%s' %(self.rstfiles[rstfile]))
         rstcmd.append('%s%s.html' %(self.htmlpath, rstfile[:-4]))
         test = '\n'

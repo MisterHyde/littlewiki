@@ -7,6 +7,7 @@ And checks on reload if a .rst file has changed, if yes the html file will be up
 CONFIGURATION
 
 The self.rstpath is the path where the .rst files lies.
+It is possible to store the .rst files in subdirectorys with directorys for pictures, which must be named 'img'.
 The self.htmlpath is the path where the .html files resident.
 If in the self.htmlpath is a file main.css rst2html will use it to style the pages.
 
